@@ -1,0 +1,52 @@
+﻿000100 IDENTIFICATION DIVISION.                                         00010001
+000200 PROGRAM-ID. OZA140P2.                                            00020001
+000300 DATA DIVISION.                                                   00030001
+000400 WORKING-STORAGE SECTION.                                         00040001
+000500     COPY OZA1341.                                                00050007
+000501     COPY OZA134C.                                                00050102
+000502     COPY DFHBMSCA.                                               00050203
+000520 01 WS-EID PIC X(5).                                              00052001
+000521 01 WS-RESP PIC S9(8) COMP.                                       00052101
+000540 01 WS-COMMAREA.                                                  00054003
+000550    10 WS-KEY PIC X(5).                                           00055001
+000600 PROCEDURE DIVISION.                                              00060001
+000610     MOVE LOW-VALUES TO UPDATESI UPDATESO.                        00061001
+000620     MOVE 'UPDATE EMP DETAIL:' TO VMSGO.                          00062010
+000630     EXEC CICS SEND                                               00063010
+000640          MAP('UPDATES')                                          00064010
+000650          MAPSET('OZA1341')                                       00065010
+000651          ERASE                                                   00065110
+000660     END-EXEC.                                                    00066010
+000661     EXEC CICS RECEIVE                                            00066101
+000662          MAP('UPDATES')                                          00066201
+000663          MAPSET('OZA1341')                                       00066307
+000664          INTO(UPDATESI)                                          00066403
+000665     END-EXEC.                                                    00066501
+000666     MOVE UPDEMIDI TO WS-EID.                                     00066604
+000667     MOVE UPDEMIDI TO WS-KEY.                                     00066704
+000668     MOVE UPDEMIDI TO EMPID OF EMP-DET                            00066810
+000669     MOVE UPDNAMEI TO NAME OF EMP-DET                             00066904
+000670     MOVE UPDAGEI  TO AGE  OF EMP-DET                             00067004
+000671     MOVE UPDGENDI TO GEN  OF EMP-DET                             00067104
+000672     MOVE UPDDOJI  TO DOJ  OF EMP-DET                             00067208
+000674     EXEC CICS REWRITE                                            00067403
+000675         FILE('OZA134F')                                          00067503
+000676         FROM(EMP-DET)                                            00067603
+000677         LENGTH(LENGTH OF EMP-DET)                                00067703
+000678         RESP(WS-RESP)                                            00067803
+000679     END-EXEC.                                                    00067903
+000681     IF WS-RESP = DFHRESP(NORMAL)                                 00068102
+000680         MOVE 'EMP DETAILS UPDATED' TO UMSGO                      00068213
+000683         EXEC CICS LINK                                           00068302
+000684              PROGRAM('OZA140P1')                                 00068406
+000685              COMMAREA(WS-COMMAREA)                               00068502
+000686              LENGTH(LENGTH OF WS-COMMAREA)                       00068602
+000687         END-EXEC                                                 00068702
+000688         EXEC CICS RETURN END-EXEC                                00068802
+000689     ELSE                                                         00068902
+000690         EXEC CICS SEND                                           00069003
+000691              MAP('FAILSSC')                                      00069103
+000692              MAPSET('OZA1341')                                   00069207
+000693              ERASE                                               00069303
+000694         END-EXEC                                                 00069403
+000695         EXEC CICS RETURN END-EXEC                                00069503

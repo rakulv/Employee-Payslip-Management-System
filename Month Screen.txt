@@ -1,0 +1,37 @@
+﻿000100 IDENTIFICATION DIVISION.                                         00010000
+000200 PROGRAM-ID. OZA140P2.                                            00020000
+000300 DATA DIVISION.                                                   00030000
+000400 WORKING-STORAGE SECTION.                                         00040000
+000410 01 WS-KEY-COPY PIC X(5).                                         00041000
+000420 01 WS-EID PIC X(5).                                              00042000
+       01 WS-COMMAREA.                                                  00042100
+          10 WS-MONTH PIC X(2).                                         00043000
+          10 WS-KEY PIC X(5).                                           00043100
+000500     COPY OZA1341.                                                00044000
+000520 LINKAGE SECTION.                                                 00046000
+000530 01 DFHCOMMAREA.                                                  00047000
+000540    10 WS-PKEY PIC X(5).                                          00048000
+000600 PROCEDURE DIVISION.                                              00049000
+000610     MOVE LOW-VALUES TO THANKSCI THANKSCO.                        00050000
+000611     IF EIBCALEN > 0                                              00060000
+000612        MOVE WS-PKEY TO WS-KEY-COPY                               00061000
+000613     END-IF.                                                      00061100
+000614     MOVE WS-KEY-COPY TO WS-EID.                                  00061200
+           MOVE WS-EID TO WS-KEY.                                       00061300
+001110     EXEC CICS SEND                                               00090000
+001120           MAP('THANKSC')                                         00100000
+001130           MAPSET('OZA1341')                                      00110000
+001140           ERASE                                                  00111000
+001150     END-EXEC.                                                    00112000
+           EXEC CICS RECEIVE                                            00112100
+                MAP('THANKSC')                                          00112200
+                MAPSET('OZA1341')                                       00112300
+                INTO(THANKSCI)                                          00112400
+           END-EXEC.                                                    00112500
+           MOVE MONTHI TO WS-MONTH.                                     00112600
+           EXEC CICS LINK                                               00112701
+                PROGRAM('OZA140P4')                                     00112801
+                COMMAREA(WS-COMMAREA)                                   00112901
+                LENGTH(LENGTH OF WS-COMMAREA)                           00113000
+           END-EXEC.                                                    00113200
+001200     EXEC CICS RETURN END-EXEC.                                   00114000

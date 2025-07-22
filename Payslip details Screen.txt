@@ -1,0 +1,102 @@
+﻿000100 IDENTIFICATION DIVISION.                                         00010001
+000200 PROGRAM-ID. TRIMM.                                               00020001
+000300 ENVIRONMENT DIVISION.                                            00030001
+000400 DATA DIVISION.                                                   00040001
+000500 WORKING-STORAGE SECTION.                                         00050001
+000600 01 PS-DATE PIC X(10) VALUE '01/01/2024'.                         00060001
+000700 01 EMP-ID PIC X(05).                                             00070002
+000800 01 MONTH PIC 99.                                                 00080002
+000900 01 TEMP-ID PIC X(02).                                            00090001
+001000 01 PS-ID PIC X(05).                                              00100001
+001100 01 PS-GEN-DT PIC X(10) VALUE '01/01/2024'.                       00110001
+001200 01 ADDDT PIC X(02).                                              00120001
+001300 01 NXT-DT PIC 99.                                                00130001
+001400 01 ALPHANUM-NXT-DT PIC XX.                                       00140001
+001500 01 NUM PIC 99.                                                   00150001
+001600 01 WRK-DS PIC 99.                                                00160001
+001700*   COPY EMPATD.                                                  00170001
+001800    COPY OZA1341.                                                 00180001
+001900    COPY OZA126C.                                                 00190001
+002000 01 WS-KEY-COPY PIC X(5).                                         00200001
+002100 01 WS-MONTH-COPY PIC X(2).                                       00210001
+002200 01 WS-EID PIC X(5).                                              00220001
+002300 LINKAGE SECTION.                                                 00230001
+002400 01 DFHCOMMAREA.                                                  00240001
+002500    10 WS-MONTH PIC X(2).                                         00250003
+002600    10 WS-KEY PIC X(5).                                           00260003
+002700 PROCEDURE DIVISION.                                              00270001
+002800     MOVE LOW-VALUES TO FINALSCI FINALSCO.                        00280001
+002900     IF EIBCALEN > 0                                              00290002
+003000        MOVE WS-KEY TO WS-KEY-COPY                                00300003
+003100         MOVE WS-MONTH TO WS-MONTH-COPY                           00310002
+003200     END-IF.                                                      00320002
+003300     MOVE WS-KEY-COPY TO WS-EID.                                  00330002
+003400     MOVE WS-EID TO EMP-ID.                                       00340002
+003500     MOVE WS-MONTH-COPY TO MONTH.                                 00350002
+003600     MOVE EMP-ID(4:2) TO TEMP-ID                                  00360001
+003700     MOVE 'P' TO PS-ID(1:1)                                       00370001
+003800     MOVE TEMP-ID TO PS-ID(2:2)                                   00380001
+003900     MOVE MONTH TO PS-ID(4:2)                                     00390001
+004000     MOVE PS-ID TO PYSLPIDO.                                      00400001
+004100     MOVE MONTH TO PS-DATE(4:2)                                   00410001
+004200     MOVE PS-DATE TO PYSLPDO.                                     00420001
+004900     MOVE PS-GEN-DT(4:2) TO ADDDT                                 00490001
+005000     IF MONTH = '12'                                              00500001
+005100         MOVE '01/01/2025' TO NXTPSDTO                            00510001
+005200     ELSE                                                         00520001
+005300         COMPUTE NXT-DT = MONTH + 1                               00530001
+005400         MOVE NXT-DT TO ADDDT                                     00540001
+005500         MOVE ADDDT TO PS-GEN-DT(4:2)                             00550001
+005600         MOVE PS-GEN-DT TO NXTPSDTO                               00560001
+005700     END-IF.                                                      00570001
+           EXEC CICS READ                                               00571003
+                FILE('OZA134F1')                                        00572003
+                INTO(PID-DET)                                           00573003
+                RIDFLD(WS-EID)                                          00574003
+                LENGTH(LENGTH OF PID-DET)                               00575003
+           END-EXEC.                                                    00576003
+005800     EVALUATE MONTH                                               00580001
+005900         WHEN 01                                                  00590001
+006000             MOVE 25 TO WRK-DS                                    00600001
+                   MOVE JAN TO NODYPRSO                                 00601003
+006100         WHEN 02                                                  00610001
+006200             MOVE 21 TO WRK-DS                                    00620001
+                   MOVE FEB TO NODYPRSO                                 00621003
+006300         WHEN 03                                                  00630001
+006400             MOVE 22 TO WRK-DS                                    00640001
+                   MOVE MAR TO NODYPRSO                                 00641003
+006500         WHEN 04                                                  00650001
+006600             MOVE 22 TO WRK-DS                                    00660001
+                   MOVE APR TO NODYPRSO                                 00661003
+006700         WHEN 05                                                  00670001
+006800             MOVE 24 TO WRK-DS                                    00680001
+                   MOVE MAY TO NODYPRSO                                 00681003
+006900         WHEN 06                                                  00690001
+007000             MOVE 23 TO WRK-DS                                    00700001
+                   MOVE JUN TO NODYPRSO                                 00701003
+007100         WHEN 07                                                  00710001
+007200             MOVE 27 TO WRK-DS                                    00720001
+                   MOVE JULY TO NODYPRSO                                00721003
+007300         WHEN 08                                                  00730001
+007400             MOVE 22 TO WRK-DS                                    00740001
+                   MOVE AUG TO NODYPRSO                                 00741003
+007500         WHEN 09                                                  00750001
+007600             MOVE 22 TO WRK-DS                                    00760001
+                   MOVE SEP TO NODYPRSO                                 00761003
+007700         WHEN 10                                                  00770001
+007800             MOVE 19 TO WRK-DS                                    00780001
+                   MOVE OCT TO NODYPRSO                                 00781003
+007900         WHEN 11                                                  00790001
+008000             MOVE 24 TO WRK-DS                                    00800001
+                   MOVE NOV TO NODYPRSO                                 00801003
+008100         WHEN 12                                                  00810001
+008200             MOVE 25 TO WRK-DS                                    00820001
+                   MOVE DEC TO NODYPRSO                                 00821003
+008300     END-EVALUATE.                                                00830001
+008400     MOVE WRK-DS TO NOWRKDYO.                                     00840001
+008500     EXEC CICS SEND                                               00850001
+008600          MAP('FINALSC')                                          00860001
+008700          MAPSET('OZA1341')                                       00870001
+008800          ERASE                                                   00880001
+008900     END-EXEC.                                                    00890001
+009000     EXEC CICS RETURN END-EXEC.                                   00900001

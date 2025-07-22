@@ -1,0 +1,41 @@
+﻿000100 IDENTIFICATION DIVISION.                                         00010000
+000200 PROGRAM-ID. OZA140P2.                                            00020000
+000300 DATA DIVISION.                                                   00030000
+000400 WORKING-STORAGE SECTION.                                         00040000
+000410 01 WS-KEY-COPY PIC X(5).                                         00041004
+000420 01 WS-EID PIC X(5).                                              00042004
+000430 01 WS-RESP PIC S9(8) COMP.                                       00043004
+000500     COPY OZA1341.                                                00050003
+000510     COPY OZA126C.                                                00051004
+000520 LINKAGE SECTION.                                                 00052004
+000530 01 DFHCOMMAREA.                                                  00053004
+000540    10 WS-PKEY PIC X(5).                                          00054006
+000600 PROCEDURE DIVISION.                                              00060000
+000610     MOVE LOW-VALUES TO FINALSCI FINALSCO.                        00061001
+000611     IF EIBCALEN > 0                                              00061106
+000612        MOVE WS-PKEY TO WS-KEY-COPY                               00061206
+000613     END-IF.                                                      00061306
+000614     MOVE WS-KEY-COPY TO WS-EID.                                  00061404
+000620     EXEC CICS READ                                               00062004
+000630          FILE('OZA134F1')                                        00063010
+000640          INTO(PID-DET)                                           00064004
+000650          RIDFLD(WS-EID)                                          00065004
+000651          RESP(WS-RESP)                                           00065104
+000660          LENGTH(LENGTH OF PID-DET)                               00066005
+000670     END-EXEC                                                     00067006
+000690     MOVE PAYID TO PYSLPIDO                                       00069006
+000691     MOVE PDATE TO PYSLPDO                                        00069106
+000692     MOVE NDATE TO NXTPSDTO                                       00069206
+000693     MOVE NWD TO NOWRKDYO                                         00069306
+000694     MOVE NPD TO NODYPRSO                                         00069406
+000700     EXEC CICS SEND                                               00070006
+000800          MAP('FINALSC')                                          00080006
+000900          MAPSET('OZA1341')                                       00090006
+001000          ERASE                                                   00100006
+001100     END-EXEC.                                                    00110006
+001110*    EXEC CICS SEND                                               00111009
+001120*          MAP('THANKSC')                                         00112009
+001130*          MAPSET('OZA1341')                                      00113009
+001140*          ERASE                                                  00114009
+001150*    END-EXEC.                                                    00115009
+001200     EXEC CICS RETURN END-EXEC.                                   00120009

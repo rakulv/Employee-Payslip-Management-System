@@ -1,0 +1,61 @@
+﻿000100 IDENTIFICATION DIVISION.                                         00010000
+000200 PROGRAM-ID. OZA140P1.                                            00020000
+000300 DATA DIVISION.                                                   00030000
+000310*LINKAGE SECTION.                                                 00031005
+000320*01 DFHCOMMAREA.                                                  00032005
+000330*   10 WS-KEY PIC X(5).                                           00033005
+000400 WORKING-STORAGE SECTION.                                         00040000
+000410 01 WS-KEY-COPY PIC X(5).                                         00041004
+000420 01 WS-EID PIC X(5).                                              00042004
+000430 01 WS-COMMAREA.                                                  00043016
+000440    10 WS-PKEY PIC X(5).                                          00044016
+000500     COPY OZA1341.                                                00050012
+000510     COPY OZA134C.                                                00051003
+000520 LINKAGE SECTION.                                                 00052005
+000530 01 DFHCOMMAREA.                                                  00053005
+000540    10 WS-KEY PIC X(5).                                           00054005
+000600 PROCEDURE DIVISION.                                              00060000
+000610     MOVE LOW-VALUES TO UPDATESI UPDATESO.                        00061013
+000611     IF EIBCALEN > 0                                              00061105
+000612        MOVE WS-KEY TO WS-KEY-COPY                                00061205
+000613     END-IF.                                                      00061305
+000614     MOVE WS-KEY-COPY TO WS-EID.                                  00061405
+000615     EXEC CICS READ                                               00061504
+000616         FILE('OZA134F')                                          00061604
+000617         INTO(EMP-DET)                                            00061704
+000618         RIDFLD(WS-EID)                                           00061804
+000619         LENGTH(LENGTH OF EMP-DET)                                00061906
+000620         UPDATE                                                   00062006
+000621     END-EXEC                                                     00062104
+000622     MOVE EMPID TO UPDEMIDO                                       00062214
+000623     MOVE NAME TO UPDNAMEO                                        00062313
+000630     MOVE AGE TO UPDAGEO                                          00063013
+000640     MOVE GEN TO UPDGENDO                                         00064013
+000650     MOVE DOJ TO UPDDOJO                                          00065013
+000660     MOVE 'EMPLOYEE DETAILS:' TO VMSGO                            00066014
+000700     EXEC CICS SEND                                               00070000
+000800          MAP('UPDATES')                                          00080013
+000900          MAPSET('OZA1341')                                       00090012
+001000          ERASE                                                   00100000
+001100     END-EXEC.                                                    00110000
+001200     EXEC CICS RECEIVE                                            00120000
+001300          MAP('UPDATES')                                          00130013
+001400          MAPSET('OZA1341')                                       00140012
+001500          INTO(UPDATESI)                                          00150013
+001600     END-EXEC.                                                    00160000
+001700     IF CONFIRMI = 'Y'                                            00170000
+001710         MOVE WS-EID TO WS-PKEY                                   00171016
+001800         EXEC CICS LINK                                           00180000
+001900              PROGRAM('OZA140P5')                                 00190018
+001910              COMMAREA(WS-COMMAREA)                               00191016
+001920              LENGTH(LENGTH OF WS-COMMAREA)                       00192016
+002000         END-EXEC                                                 00200000
+002100     ELSE                                                         00210000
+002110         MOVE 'UPDATE EMP DEATILS:' TO VMSGO                      00211015
+002200         EXEC CICS LINK                                           00220000
+002300              PROGRAM('OZA140P3')                                 00230011
+002400         END-EXEC                                                 00240007
+002410     END-IF.                                                      00241007
+002500     EXEC CICS RETURN END-EXEC.                                   00250000
+
+

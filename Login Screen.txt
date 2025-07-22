@@ -1,0 +1,49 @@
+﻿000100 IDENTIFICATION DIVISION.                                         00010001
+000200 PROGRAM-ID. LOGONTS.                                             00020001
+000300 DATA DIVISION.                                                   00030001
+000400 WORKING-STORAGE SECTION.                                         00040001
+000410 01 WS-RESP PIC S9(8) COMP.                                       00041002
+000420 01 WS-EID  PIC X(5).                                             00042004
+000500     COPY DFHBMSCA.                                               00050001
+000600     COPY OZA1341.                                                00060014
+000610     COPY OZA134C.                                                00061001
+000630 01 WS-COMMAREA.                                                  00063010
+000640    10 WS-KEY PIC X(5).                                           00064010
+000700 PROCEDURE DIVISION.                                              00070001
+000800     MOVE LOW-VALUES TO SUBHAMPI SUBHAMPO                         00080008
+000810                        FAILSSCI FAILSSCO.                        00081002
+000900     EXEC CICS SEND                                               00090001
+001000              MAP('SUBHAMP')                                      00100001
+001100              MAPSET('OZA1341')                                   00110014
+001200              ERASE                                               00120001
+001300     END-EXEC.                                                    00130001
+001400     EXEC CICS RECEIVE                                            00140001
+001500              MAP('SUBHAMP')                                      00150001
+001600              MAPSET('OZA1341') INTO(SUBHAMPI)                    00160014
+001700     END-EXEC.                                                    00170001
+001701     MOVE USERIDI TO WS-EID.                                      00170104
+001702     MOVE USERIDI TO WS-KEY.                                      00170209
+001710     EXEC CICS READ                                               00171001
+001720         FILE('OZA134F')                                          00172001
+001730         INTO(EMP-DET)                                            00173001
+001740         RIDFLD(WS-EID)                                           00174004
+001750         LENGTH(LENGTH OF EMP-DET)                                00175001
+001760         RESP(WS-RESP)                                            00176001
+001770     END-EXEC.                                                    00177001
+001800     IF WS-RESP = DFHRESP(NORMAL)                                 00180003
+002030         EXEC CICS LINK                                           00203005
+002040              PROGRAM('OZA140P1')                                 00204013
+002041              COMMAREA(WS-COMMAREA)                               00204109
+002042              LENGTH(LENGTH OF WS-COMMAREA)                       00204209
+002050         END-EXEC                                                 00205008
+002060         EXEC CICS RETURN END-EXEC                                00206005
+002300     ELSE                                                         00230002
+002400         EXEC CICS SEND                                           00240002
+002500              MAP('FAILSSC')                                      00250002
+002600              MAPSET('OZA1341')                                   00260014
+002700              ERASE                                               00270002
+002800         END-EXEC                                                 00280002
+002900         EXEC CICS RETURN END-EXEC                                00290002
+003000     END-IF.                                                      00300002
+
+
